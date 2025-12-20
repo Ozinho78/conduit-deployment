@@ -4,11 +4,11 @@
 Write-Host "==> Starting Conduit Deployment Setup" -ForegroundColor Green
 
 # Konfiguration - Passe diese Pfade an!
-$DEPLOY_DIR = $PSScriptRoot  # Aktuelles Verzeichnis (wo das Skript liegt)
+$DEPLOY_DIR = $PSScriptRoot
 $BACKEND_REPO = Join-Path $DEPLOY_DIR "conduit-backend"
 $FRONTEND_REPO = Join-Path $DEPLOY_DIR "conduit-frontend"
 
-# Prüfe ob Repos existieren
+# Pruefe ob Repos existieren
 if (-not (Test-Path $BACKEND_REPO)) {
     Write-Host "ERROR: Backend-Repo nicht gefunden: $BACKEND_REPO" -ForegroundColor Red
     Write-Host "Klone zuerst das Backend-Repo!" -ForegroundColor Yellow
@@ -22,10 +22,12 @@ if (-not (Test-Path $FRONTEND_REPO)) {
 }
 
 # Backend-Dateien kopieren
-Write-Host "`n==> Kopiere Backend-Dateien..." -ForegroundColor Cyan
+Write-Host ""
+Write-Host "==> Kopiere Backend-Dateien..." -ForegroundColor Cyan
 
 $backendFiles = @{
-    "backend.Dockerfile" = "Dockerfile"
+    # "backend.Dockerfile" = "backend.Dockerfile"
+    # "nginx-backend.conf" = "nginx-backend.conf"
     "entrypoint.sh" = "entrypoint.sh"
     "backend.dockerignore" = ".dockerignore"
 }
@@ -37,19 +39,20 @@ foreach ($source in $backendFiles.Keys) {
     
     if (Test-Path $sourcePath) {
         Copy-Item -Path $sourcePath -Destination $destPath -Force
-        Write-Host "  ✓ $source -> backend/$destination" -ForegroundColor Green
+        Write-Host "  OK $source -> backend/$destination" -ForegroundColor Green
     } else {
-        Write-Host "  ✗ Datei nicht gefunden: $source" -ForegroundColor Red
+        Write-Host "  FEHLT $source" -ForegroundColor Red
     }
 }
 
 # Frontend-Dateien kopieren
-Write-Host "`n==> Kopiere Frontend-Dateien..." -ForegroundColor Cyan
+Write-Host ""
+Write-Host "==> Kopiere Frontend-Dateien..." -ForegroundColor Cyan
 
 $frontendFiles = @{
-    "frontend.Dockerfile" = "Dockerfile"
-    "nginx-frontend.conf" = "nginx-frontend.conf"
     "frontend.dockerignore" = ".dockerignore"
+    # "frontend.Dockerfile" = "frontend.Dockerfile"
+    "nginx-frontend.conf" = "nginx-frontend.conf"
 }
 
 foreach ($source in $frontendFiles.Keys) {
@@ -59,27 +62,28 @@ foreach ($source in $frontendFiles.Keys) {
     
     if (Test-Path $sourcePath) {
         Copy-Item -Path $sourcePath -Destination $destPath -Force
-        Write-Host "  ✓ $source -> frontend/$destination" -ForegroundColor Green
+        Write-Host "  OK $source -> frontend/$destination" -ForegroundColor Green
     } else {
-        Write-Host "  ✗ Datei nicht gefunden: $source" -ForegroundColor Red
+        Write-Host "  FEHLT $source" -ForegroundColor Red
     }
 }
 
-# Berechtigungen für entrypoint.sh setzen (für WSL/Git Bash)
-Write-Host "`n==> Setze Berechtigungen..." -ForegroundColor Cyan
+# Berechtigungen fuer entrypoint.sh
+Write-Host ""
+Write-Host "==> Setze Berechtigungen..." -ForegroundColor Cyan
 $entrypointPath = Join-Path $BACKEND_REPO "entrypoint.sh"
+
 if (Test-Path $entrypointPath) {
-    # Git bash command für Berechtigungen (funktioniert wenn Git installiert ist)
-    try {
-        & git update-index --chmod=+x "$entrypointPath" 2>$null
-        Write-Host "  ✓ entrypoint.sh ist ausführbar" -ForegroundColor Green
-    } catch {
-        Write-Host "  ! Git nicht verfügbar - Berechtigungen manuell in WSL/Linux setzen" -ForegroundColor Yellow
-    }
+    Write-Host "  OK entrypoint.sh gefunden" -ForegroundColor Green
+    Write-Host "  HINWEIS: Stelle sicher dass entrypoint.sh Unix-Zeilenenden (LF) hat!" -ForegroundColor Yellow
+} else {
+    Write-Host "  FEHLT entrypoint.sh" -ForegroundColor Red
 }
 
-Write-Host "`n==> Deployment-Setup abgeschlossen!" -ForegroundColor Green
-Write-Host "`nNächste Schritte:" -ForegroundColor Cyan
-Write-Host "  1. docker compose build" -ForegroundColor White
-Write-Host "  2. docker compose up -d" -ForegroundColor White
-Write-Host "  3. docker compose logs -f" -ForegroundColor White
+Write-Host ""
+Write-Host "==> Deployment-Setup abgeschlossen!" -ForegroundColor Green
+Write-Host ""
+Write-Host "Naechste Schritte:" -ForegroundColor Cyan
+Write-Host "  1. docker compose build"
+Write-Host "  2. docker compose up -d"
+Write-Host "  3. docker compose logs -f"

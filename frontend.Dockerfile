@@ -10,6 +10,7 @@ COPY . .
 
 RUN npm run build --prod
 
+
 FROM nginx:alpine
 
 COPY --from=builder /build/dist/angular-conduit/ /usr/share/nginx/html/

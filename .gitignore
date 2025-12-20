@@ -320,3 +320,5 @@ test/
 # Code-Repos
 conduit-frontend/
 conduit-backend/
+
+up.bat

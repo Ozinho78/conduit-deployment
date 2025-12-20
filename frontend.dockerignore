@@ -1,0 +1,73 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+.angular/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+e2e/
+coverage/
+.nyc_output/
+*.spec.ts
+*.spec.js
+karma.conf.js
+protractor.conf.js
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Docker (to avoid recursion)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+nginx*.conf
+
+# OS
+Thumbs.db
+.DS_Store
+*.tmp
+
+# Angular specific
+.angular/
+.browserslistrc
+.editorconfig
+tsconfig.*.json

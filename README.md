@@ -28,7 +28,7 @@ This repository contains the **deployment configuration** for the Conduit full-s
 
 **Components:**
 - **Backend**: Django REST API with Gunicorn WSGI server
-- **Frontend**: Angular SPA served via Nginx
+- **Frontend**: Angular Single Page Application (SPA) served via Nginx
 - **Database**: PostgreSQL for data persistence
 - **Proxy**: Nginx reverse proxy for static files and API routing
 
@@ -355,6 +355,6 @@ POSTGRES_PASSWORD=your_password
 
 ---
 
-**Last Updated:** December 2025
-**Course:** DevSecOps
-**Project:** Conduit Containerization
+**Last Updated:** December 2025 <br>
+**Course:** DevSecOps <br>
+**Project:** Conduit Containerization <br>

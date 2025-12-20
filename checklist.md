@@ -92,7 +92,7 @@ Before you submit your project, you should have ensured and tested the following
 **Save logs to file:**
 
 ```bash
-docker logs [container-name] > meine-container-logs.txt
+docker logs [container-name] > my-container-logs.txt
 ```
 
 `[container-name]` must then be replaced with the name of the container accordingly.

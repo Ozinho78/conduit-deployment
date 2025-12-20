@@ -34,52 +34,6 @@ This repository contains the **deployment configuration** for the Conduit full-s
 
 **Purpose:** This is a **deployment-only repository**. The application source code (frontend and backend) are maintained in separate repositories and cloned into this structure.
 
-**Key Features:**
-- ✅ Multi-stage Docker builds (optimized image size)
-- ✅ Production WSGI server (Gunicorn) - no development servers
-- ✅ PostgreSQL database with persistent volumes
-- ✅ Nginx for static file serving (CSS, JS, images)
-- ✅ Health checks and automatic restarts
-- ✅ Environment-based configuration (no secrets in code)
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    Internet                          │
-└──────────────┬──────────────────┬────────────────────┘
-               │                  │
-      Port 8282│         Port 8000│
-               │                  │
-     ┌─────────▼────────┐  ┌──────▼────────────┐
-     │    Frontend      │  │  Backend Nginx    │
-     │  (Nginx/Angular) │  │  (Static Files +  │
-     └─────────┬────────┘  │   API Proxy)      │
-               │           └──────┬────────────┘
-               │                  │
-               │         ┌────────▼──────────┐
-               └────────►│     Backend       │
-                         │ (Gunicorn/Django) │
-                         └────────┬──────────┘
-                                  │
-                         ┌────────▼──────────┐
-                         │    PostgreSQL     │
-                         └───────────────────┘
-```
-
-**Services:**
-- `frontend` - Angular app on port 8282 (Nginx)
-- `backend-nginx` - Reverse proxy on port 8000 (serves static CSS/JS + proxies API)
-- `backend` - Django + Gunicorn WSGI (internal port 8000)
-- `database` - PostgreSQL 13 (internal port 5432)
-
-**Static Files Flow (solves CSS problem):**
-1. Backend runs `collectstatic` → CSS/JS to `/app/staticfiles`
-2. Volume shared between `backend` and `backend-nginx`
-3. Nginx serves static files from `/staticfiles/` → **CSS/JS now work!**
-
 ---
 
 ## Prerequisites
@@ -98,34 +52,41 @@ docker compose version
 
 ## Quickstart
 
-**Get running in 5 minutes:**
-
-```bash
 # 1. Clone this deployment repo
-git clone <your-deployment-repo-url>
+```bash
+git clone <this-deployment-repo-url>
 cd conduit-deployment
+```
 
 # 2. Clone application repositories
+```bash
 git clone <backend-repo-url> conduit-backend
 git clone <frontend-repo-url> conduit-frontend
+```
 
 # 3. Copy .dockerignore files
+```bash
 cp backend.dockerignore conduit-backend/.dockerignore
 cp frontend.dockerignore conduit-frontend/.dockerignore
+```
 
-# 4. Configure backend for PostgreSQL (see section below)
+Configure backend for PostgreSQL
 
 # 5. Create .env file
+## Set POSTGRES_PASSWORD, DJANGO_SECRET_KEY, YOUR_VM_IP
+```bash
 cp .env.example .env
-nano .env  # Set POSTGRES_PASSWORD, DJANGO_SECRET_KEY, YOUR_VM_IP
+nano .env
+```
 
 # 6. Start services
+```bash
 docker compose up -d --build
+```
 
 # 7. Access application
-# Frontend: http://YOUR_VM_IP:8282
-# Backend:  http://YOUR_VM_IP:8000
-```
+## Frontend: http://<YOUR_VM_IP>:8282
+## Backend:  http://<YOUR_VM_IP>:8000
 
 ---
 
@@ -135,7 +96,7 @@ docker compose up -d --build
 
 **Directory structure after setup:**
 
-```
+```bash
 conduit-deployment/
 ├── backend.Dockerfile
 ├── frontend.Dockerfile
@@ -149,13 +110,9 @@ conduit-deployment/
 ├── backend.dockerignore
 ├── frontend.dockerignore
 ├── conduit-backend/            # Cloned from separate repo
-│   ├── manage.py
-│   ├── requirements.txt
 │   └── conduit/
 │       └── settings.py         # Must be modified!
 └── conduit-frontend/           # Cloned from separate repo
-    ├── package.json
-    └── src/
 ```
 
 ### Backend PostgreSQL Configuration
@@ -303,7 +260,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:8282,http://YOUR_VM_IP_HERE:8282
 **Generate Django Secret Key:**
 
 ```bash
-python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 ```
 
 ### Building and Running
@@ -332,58 +289,24 @@ docker compose ps
 ```
 
 **Stop services:**
-
-```bash
 # Stop (keeps data)
+```bash
 docker compose stop
-
-# Stop and remove containers (keeps volumes)
-docker compose down
-
-# Stop and remove everything including data
-docker compose down -v  # WARNING: Deletes database!
 ```
 
-### Testing
+# Stop and remove containers (keeps volumes)
+```bash
+docker compose down
+```
 
-**Required tests (from checklist):**
+# Stop and remove everything including data
 
-1. **Frontend accessible on port 8282:**
-   ```bash
-   curl http://YOUR_VM_IP:8282
-   # Or open in browser
-   ```
+> [!WARNING]  
+> Deletes database!
 
-2. **Backend API accessible on port 8000:**
-   ```bash
-   curl http://YOUR_VM_IP:8000/api/
-   ```
-
-3. **Gunicorn WSGI running (NOT dev server):**
-   ```bash
-   docker logs conduit-backend | grep gunicorn
-   # Should show Gunicorn worker logs
-   ```
-
-4. **Navigate through application:**
-   - Open `http://YOUR_VM_IP:8282` in browser
-   - Click through pages
-   - Verify data loads correctly
-   - **Check that CSS/JS loads!** (Static files from Nginx)
-
-5. **Containers restart on failure:**
-   ```bash
-   docker kill conduit-backend
-   sleep 5
-   docker compose ps
-   # Backend should be "Up" again
-   ```
-
-6. **Health checks working:**
-   ```bash
-   curl http://YOUR_VM_IP:8000/health
-   # Should return: {"status": "healthy", ...}
-   ```
+```bash
+docker compose down -v
+```
 
 ### Logs
 
@@ -402,7 +325,7 @@ docker compose logs frontend
 docker compose logs database
 ```
 
-**Save logs to file (checklist requirement):**
+**Save logs to file:**
 
 ```bash
 # Backend logs
@@ -420,24 +343,6 @@ docker compose logs --timestamps > all-logs.txt
 
 ---
 
-## Configuration
-
-### Port Mapping
-
-| Service       | Internal | External | Environment Variable |
-|---------------|----------|----------|---------------------|
-| frontend      | 4200     | 8282     | FRONTEND_PORT       |
-| backend-nginx | 80       | 8000     | BACKEND_PORT        |
-| backend       | 8000     | (internal) | -                 |
-| database      | 5432     | (internal) | -                 |
-
-**Modify ports in .env:**
-
-```bash
-FRONTEND_PORT=8282  # Checklist requirement!
-BACKEND_PORT=8000
-```
-
 ### Database
 
 **PostgreSQL configuration (.env):**
@@ -448,136 +353,8 @@ POSTGRES_USER=conduit
 POSTGRES_PASSWORD=your_password
 ```
 
-**Backup database:**
-
-```bash
-docker exec conduit-postgres pg_dump -U conduit conduit > backup.sql
-```
-
-**Restore database:**
-
-```bash
-docker exec -i conduit-postgres psql -U conduit conduit < backup.sql
-```
-
-### Static Files (CSS/JS)
-
-**How it works:**
-
-1. Backend Dockerfile runs `collectstatic` during build
-2. Static files stored in `/app/staticfiles` (in container)
-3. Volume `static_volume` shared between `backend` and `backend-nginx`
-4. Nginx serves files from `/staticfiles/` at `/static/` URL
-
-**If CSS/JS not loading:**
-
-```bash
-# Rebuild backend to collect static files
-docker compose build backend
-docker compose up -d backend
-
-# Or manually collect
-docker exec conduit-backend python manage.py collectstatic --noinput
-```
-
 ---
 
-## Troubleshooting
-
-### CSS/JS not loading (no styling)
-
-**Problem:** Backend shows unstyled HTML (no CSS).
-
-**Solution:** Nginx serves static files, not Gunicorn!
-
-1. Check if static files were collected:
-   ```bash
-   docker exec conduit-backend ls -la /app/staticfiles/
-   ```
-
-2. Check Nginx volume mount:
-   ```bash
-   docker inspect conduit-backend-nginx | grep -A 5 Mounts
-   ```
-
-3. Rebuild backend:
-   ```bash
-   docker compose build backend
-   docker compose up -d backend
-   ```
-
-4. Check browser console for 404 errors on `/static/` URLs
-
-### ALLOWED_HOSTS error
-
-**Symptom:** `Invalid HTTP_HOST header: 'xxx'`
-
-**Solution:** Add hostname to `.env`:
-
-```bash
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,conduit-backend,YOUR_IP
-```
-
-### Database connection failed
-
-**Check if PostgreSQL is running:**
-
-```bash
-docker compose ps database
-docker compose logs database
-```
-
-**Test connection:**
-
-```bash
-docker exec -it conduit-postgres psql -U conduit -d conduit
-```
-
-### Container won't start
-
-**Check logs:**
-
-```bash
-docker compose logs backend
-docker logs conduit-backend
-```
-
-**Inspect container:**
-
-```bash
-docker inspect conduit-backend
-```
-
-### Health check failing
-
-**Test health endpoint:**
-
-```bash
-docker exec conduit-backend curl http://localhost:8000/api/health
-```
-
----
-
-## Production Checklist
-
-Before deployment:
-
-- [ ] `.env` has strong passwords
-- [ ] `.env` is in `.gitignore` (NOT committed!)
-- [ ] `DJANGO_DEBUG=False`
-- [ ] PostgreSQL is used (not SQLite)
-- [ ] Gunicorn WSGI is running (not dev server)
-- [ ] Static files load correctly (CSS/JS visible)
-- [ ] Frontend accessible on port 8282
-- [ ] Backend API accessible on port 8000
-- [ ] All services have health checks
-- [ ] Containers restart on failure
-- [ ] Can save logs to file
-- [ ] Application navigation works
-- [ ] Data loads correctly
-
----
-
-**Last Updated:** December 2025  
-**Course:** DevSecOps  
+**Last Updated:** December 2025
+**Course:** DevSecOps
 **Project:** Conduit Containerization

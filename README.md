@@ -64,10 +64,8 @@ git clone git@github.com:Ozinho78/conduit-backend.git
 git clone git@github.com:Ozinho78/conduit-frontend.git
 ```
 
-# 3. Copy files
-
+### 3. Copy files
 **The script copies all necessary files into frontend and backend directory**
-
 ```bash
 # Windows
 .\deploy.ps1
@@ -78,21 +76,21 @@ git clone git@github.com:Ozinho78/conduit-frontend.git
 
 Configure backend for PostgreSQL
 
-# 5. Create .env file
-## Set POSTGRES_PASSWORD, DJANGO_SECRET_KEY, YOUR_VM_IP
+### 5. Create .env file
+**Set POSTGRES_PASSWORD, DJANGO_SECRET_KEY, YOUR_VM_IP**
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-# 6. Start services
+### 6. Start services
 ```bash
 docker compose up -d --build
 ```
 
-# 7. Access application
-## Frontend: http://<YOUR_VM_IP>:8282
-## Backend:  http://<YOUR_VM_IP>:8000
+### 7. Access application
+Frontend: http://<YOUR_VM_IP>:8282
+Backend:  http://<YOUR_VM_IP>:8000
 
 ---
 
@@ -109,10 +107,10 @@ conduit-deployment/
 ├── nginx-backend.conf          # Backend Nginx config
 ├── nginx-frontend.conf         # Frontend Nginx config
 ├── docker-compose.yaml
-├── .env.example
+├── .env.example                # template for .env
 ├── .env                        # Created by you (NOT in Git!)
 ├── .gitignore
-├── README.md
+├── README.md                   # this document
 ├── backend.dockerignore
 ├── frontend.dockerignore
 ├── conduit-backend/            # Cloned from separate repo
@@ -121,7 +119,7 @@ conduit-deployment/
 └── conduit-frontend/           # Cloned from separate repo
 ```
 
-### Backend PostgreSQL Configuration
+## Backend PostgreSQL Configuration
 
 **CRITICAL:** The backend must be modified to use PostgreSQL.
 
@@ -223,23 +221,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 ```
 
-#### Step 3: Add Health Check endpoint
-
-Create or update `conduit/urls.py`:
-
-```python
-from django.http import JsonResponse
-
-def health_check(request):
-    """Health check endpoint for Docker"""
-    return JsonResponse({'status': 'healthy', 'service': 'conduit-backend'})
-
-urlpatterns = [
-    url(r'^api/health/?$', health_check, name='health'),
-    # ... rest of URLs
-]
-```
-
 ### Environment Configuration
 
 **Create .env file:**
@@ -259,8 +240,8 @@ POSTGRES_PASSWORD=your_secure_password_here
 DJANGO_SECRET_KEY=your_generated_secret_key_here
 
 # Your VM IP (replace YOUR_VM_IP_HERE!)
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,conduit-backend,YOUR_VM_IP_HERE
-CORS_ALLOWED_ORIGINS=http://localhost:8282,http://YOUR_VM_IP_HERE:8282
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,conduit-backend,<YOUR_VM_IP_HERE>
+CORS_ALLOWED_ORIGINS=http://localhost:8282,http://<YOUR_VM_IP_HERE>:8282
 ```
 
 **Generate Django Secret Key:**

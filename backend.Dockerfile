@@ -20,6 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir \
     -r requirements.txt \
     gunicorn==19.9.0 \
+    django-cors-headers==2.1.0 \
     psycopg2-binary==2.7.7
 
 

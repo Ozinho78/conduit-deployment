@@ -1,13 +1,10 @@
 #!/bin/sh
 
-# Exit on error
 set -e
 
 echo "==> Starting Conduit Backend"
 
-# Wait a moment for database to be ready (if using external DB)
 echo "==> Waiting for database..."
-# Wait for PostgreSQL to be ready
 if [ -n "${DB_HOST}" ]; then
     echo "==> Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT:-5432}..."
     
@@ -32,15 +29,12 @@ else
     echo "==> Using SQLite (no DB_HOST specified)"
 fi
 
-# Run database migrations
 echo "==> Running database migrations..."
 python manage.py migrate --noinput
 
-# Collect static files (optional - already done in Dockerfile, but can be re-run)
 echo "==> Collecting static files..."
 python manage.py collectstatic --noinput --clear || echo "Static files collection skipped"
 
-# Start Gunicorn WSGI server
 echo "==> Starting Gunicorn WSGI Server on port ${PORT:-8000}"
 exec gunicorn conduit.wsgi:application \
     --bind 0.0.0.0:${PORT:-8000} \

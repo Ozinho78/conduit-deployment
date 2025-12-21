@@ -48,7 +48,7 @@ COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
 COPY . .
 
-# Copy entrypoint script
+
 COPY entrypoint.sh /app/entrypoint.sh
 
 RUN mkdir -p /app/staticfiles /app/mediafiles

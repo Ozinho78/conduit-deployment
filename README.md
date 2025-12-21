@@ -52,22 +52,28 @@ docker compose version
 
 ## Quickstart
 
-# 1. Clone this deployment repo
+### 1. Clone this deployment repo
 ```bash
-git clone <this-deployment-repo-url>
+git clone git@github.com:Ozinho78/conduit-deployment.git
 cd conduit-deployment
 ```
 
-# 2. Clone application repositories
+### 2. Clone application repositories
 ```bash
-git clone <backend-repo-url> conduit-backend
-git clone <frontend-repo-url> conduit-frontend
+git clone git@github.com:Ozinho78/conduit-backend.git
+git clone git@github.com:Ozinho78/conduit-frontend.git
 ```
 
-# 3. Copy .dockerignore files
+# 3. Copy files
+
+**The script copies all necessary files into frontend and backend directory**
+
 ```bash
-cp backend.dockerignore conduit-backend/.dockerignore
-cp frontend.dockerignore conduit-frontend/.dockerignore
+# Windows
+.\deploy.ps1
+
+# Linux
+./deploy.sh
 ```
 
 Configure backend for PostgreSQL

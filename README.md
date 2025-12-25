@@ -92,7 +92,7 @@ docker compose up -d --build
 ### 7. Access application
 ```bash
 Frontend: http://<YOUR_VM_IP>:8282
-Backend-Admin:  http://<YOUR_VM_IP>:8000/admin
+Backend-Admin: http://<YOUR_VM_IP>:8000/admin
 Backend-API: http://<YOUR_VM_IP>:8000/api
 ```
 
@@ -263,8 +263,11 @@ docker compose up -d --build
 ```
 
 ### Access application
+```bash
 Frontend: http://<YOUR_VM_IP>:8282
-Backend:  http://<YOUR_VM_IP>:8000/admin or http://<YOUR_VM_IP>:8000/api
+Backend-Admin: http://<YOUR_VM_IP>:8000/admin
+Backend-API: http://<YOUR_VM_IP>:8000/api
+```
 
 **View logs:**
 

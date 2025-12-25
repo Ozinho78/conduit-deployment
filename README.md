@@ -54,7 +54,7 @@ docker compose version
 
 ### 1. Clone this deployment repo
 ```bash
-git clone git@github.com:Ozinho78/conduit-deployment.git
+git clone -b feature/container-deployment git@github.com:Ozinho78/conduit-deployment.git
 cd conduit-deployment
 ```
 
@@ -71,6 +71,7 @@ git clone git@github.com:Ozinho78/conduit-frontend.git
 .\deploy.ps1
 
 # Linux
+chmod +x ./deploy.sh
 ./deploy.sh
 ```
 
@@ -90,7 +91,7 @@ docker compose up -d --build
 
 ### 7. Access application
 Frontend: http://<YOUR_VM_IP>:8282
-Backend:  http://<YOUR_VM_IP>:8000
+Backend:  http://<YOUR_VM_IP>:8000/admin or http://<YOUR_VM_IP>:8000/api
 
 ---
 
@@ -257,6 +258,10 @@ python -c 'from django.core.management.utils import get_random_secret_key; print
 ```bash
 docker compose up -d --build
 ```
+
+### Access application
+Frontend: http://<YOUR_VM_IP>:8282
+Backend:  http://<YOUR_VM_IP>:8000/admin or http://<YOUR_VM_IP>:8000/api
 
 **View logs:**
 

@@ -103,20 +103,20 @@ Backend:  http://<YOUR_VM_IP>:8000/admin or http://<YOUR_VM_IP>:8000/api
 
 ```bash
 conduit-deployment/
-├── backend.Dockerfile
-├── frontend.Dockerfile
-├── nginx-backend.conf          # Backend Nginx config
-├── nginx-frontend.conf         # Frontend Nginx config
-├── docker-compose.yaml
-├── .env.example                # template for .env
-├── .env                        # Created by you (NOT in Git!)
-├── .gitignore
-├── README.md                   # this document
-├── backend.dockerignore
-├── frontend.dockerignore
+├── backend.Dockerfile          # Multi-stage build: Django app + Gunicorn WSGI + Nginx reverse proxy
+├── frontend.Dockerfile         # Multi-stage build: Angular build → Nginx static file serving
+├── nginx-backend.conf          # Nginx config: static files + proxy_pass to Gunicorn
+├── nginx-frontend.conf         # Nginx config: serves Angular dist/ on port 8282
+├── docker-compose.yaml         # Orchestration: frontend, backend, postgres services
+├── .env.example                # Template for .env, contains environment variables
+├── .env                        # Runtime environment variables (NOT in Git!), created by YOU
+├── .gitignore                  # Excludes .env, logs, IDE configs, OS files
+├── README.md                   # This document, project documentation with ToC, quickstart, usage
+├── backend.dockerignore        # Excludes Python cache, venv, .git from Docker context
+├── frontend.dockerignore       # Excludes node_modules, .git, dist from Docker context
 ├── conduit-backend/            # Cloned from separate repo
 │   └── conduit/
-│       └── settings.py         # Must be modified!
+│       └── settings.py         # Must be modified for production (ALLOWED_HOSTS, DB config)
 └── conduit-frontend/           # Cloned from separate repo
 ```
 

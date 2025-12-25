@@ -37,7 +37,6 @@ foreach ($source in $backendFiles.Keys) {
     }
 }
 
-# Frontend-Dateien kopieren
 Write-Host ""
 Write-Host "==> Copying frontend files..." -ForegroundColor Cyan
 

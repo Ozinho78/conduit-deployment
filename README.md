@@ -58,7 +58,7 @@ git --version
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone git@github.com:Ozinho78/conduit-deployment.git
 cd conduit-deployment
 ```
 
@@ -77,8 +77,8 @@ POSTGRES_PASSWORD=your_secure_password_here
 DJANGO_SECRET_KEY=your_generated_secret_key_here
 
 # REQUIRED: Add your VM IP address
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,YOUR_VM_IP_HERE
-CORS_ALLOWED_ORIGINS=http://localhost:8282,http://YOUR_VM_IP_HERE:8282
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,<YOUR_VM_IP_HERE>
+CORS_ALLOWED_ORIGINS=http://localhost:8282,http://<YOUR_VM_IP_HERE>:8282
 ```
 
 **Generate Django Secret Key:**
@@ -92,9 +92,9 @@ docker compose up -d --build
 ```
 
 ### 5. Access application
-- **Frontend**: `http://YOUR_VM_IP:8282`
-- **Backend API**: `http://YOUR_VM_IP:8000/api`
-- **Backend Admin**: `http://YOUR_VM_IP:8000/admin`
+- **Frontend**: `http://<YOUR_VM_IP:8282>`
+- **Backend API**: `http://<YOUR_VM_IP>:8000/api`
+- **Backend Admin**: `http://<YOUR_VM_IP>:8000/admin`
 
 ---
 
@@ -124,14 +124,14 @@ nano .env  # or use your preferred editor
    ```
    Then set in `.env`:
    ```bash
-   DJANGO_SECRET_KEY=your_generated_key_here
+   DJANGO_SECRET_KEY=<your_generated_key_here>
    ```
 
 3. **Allowed Hosts** (REQUIRED for production):
    Replace `YOUR_VM_IP_HERE` with your actual VM IP address:
    ```bash
-   DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,192.168.1.100
-   CORS_ALLOWED_ORIGINS=http://localhost:8282,http://192.168.1.100:8282
+   DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,<YOUR_VM_IP_HERE>
+   CORS_ALLOWED_ORIGINS=http://localhost:8282,http://<YOUR_VM_IP_HERE>:8282
    ```
 
 **Optional settings:**
@@ -178,9 +178,9 @@ Once services are running, access the application at:
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Frontend | `http://YOUR_VM_IP:8282` | Angular SPA |
-| Backend API | `http://YOUR_VM_IP:8000/api` | REST API endpoints |
-| Admin Panel | `http://YOUR_VM_IP:8000/admin` | Django admin interface |
+| Frontend | `http://<YOUR_VM_IP>:8282` | Angular SPA |
+| Backend API | `http://<YOUR_VM_IP>:8000/api` | REST API endpoints |
+| Admin Panel | `http://<YOUR_VM_IP>:8000/admin` | Django admin interface |
 
 **Create superuser for admin access:**
 ```bash

@@ -65,7 +65,6 @@ Edit `.env` and set **required** values:
 ```bash
 # REQUIRED: Set secure password
 POSTGRES_PASSWORD=your_secure_password_here
-```
 
 # REQUIRED: Generate Django secret key
 DJANGO_SECRET_KEY=your_generated_secret_key_here

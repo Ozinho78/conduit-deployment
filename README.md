@@ -15,11 +15,6 @@ Production-ready containerized deployment for the Conduit application (Medium.co
    - [Accessing the Application](#accessing-the-application)
    - [Managing Services](#managing-services)
    - [Working with Logs](#working-with-logs)
-5. [Configuration](#configuration)
-   - [Environment Variables](#environment-variables)
-   - [Port Mappings](#port-mappings)
-   - [Data Persistence](#data-persistence)
-6. [Troubleshooting](#troubleshooting)
 
 ---
 

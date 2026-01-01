@@ -51,7 +51,7 @@ git --version
 
 ### 1. Clone the repository
 ```bash
-git clone git clone -b feature/conduit-container git@github.com:Ozinho78/conduit-container.git
+git clone git clone -b feature/conduit-container git@github.com:Ozinho78/conduit-deployment.git
 cd conduit-deployment
 ```
 

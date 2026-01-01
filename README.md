@@ -58,7 +58,7 @@ git --version
 
 ### 1. Clone the repository
 ```bash
-git clone git@github.com:Ozinho78/conduit-deployment.git
+git clone git clone -b feature/conduit-container git@github.com:Ozinho78/conduit-container.git
 cd conduit-deployment
 ```
 
@@ -72,6 +72,7 @@ Edit `.env` and set **required** values:
 ```bash
 # REQUIRED: Set secure password
 POSTGRES_PASSWORD=your_secure_password_here
+```
 
 # REQUIRED: Generate Django secret key
 DJANGO_SECRET_KEY=your_generated_secret_key_here
@@ -217,7 +218,8 @@ docker compose down
 ```
 
 **Stop and remove everything including data:**
-> ⚠️ **WARNING**: This deletes all database data!
+> ⚠️ **WARNING**
+> This deletes all database data!
 ```bash
 docker compose down -v
 ```
@@ -268,175 +270,7 @@ docker compose logs --tail=100 backend
 
 ---
 
-## Configuration
-
-### Environment Variables
-
-All environment variables are defined in `.env` file. This file is excluded from Git via `.gitignore`.
-
-**Database Configuration:**
-```bash
-POSTGRES_DB=conduit              # Database name
-POSTGRES_USER=conduit            # Database user
-POSTGRES_PASSWORD=<required>     # Database password (MUST be set!)
-```
-
-**Django Configuration:**
-```bash
-DJANGO_SECRET_KEY=<required>     # Secret key (MUST be set!)
-DEBUG=False                      # Debug mode (False for production)
-DJANGO_ALLOWED_HOSTS=<hosts>     # Comma-separated allowed hosts
-```
-
-**CORS Configuration:**
-```bash
-CORS_ALLOWED_ORIGINS=<urls>      # Comma-separated allowed origins
-```
-
-**Port Configuration:**
-```bash
-FRONTEND_PORT=8282               # External frontend port
-BACKEND_PORT=8000                # External backend port
-```
-
-### Port Mappings
-
-The following ports are exposed to the host system:
-
-| Service | Container Port | Host Port | Configurable via |
-|---------|---------------|-----------|------------------|
-| Frontend | 80 | 8282 | `FRONTEND_PORT` |
-| Backend | 8000 | 8000 | `BACKEND_PORT` |
-| Database | 5432 | - | Internal only |
-
-**To change ports:**
-Edit `.env` file and modify `FRONTEND_PORT` or `BACKEND_PORT`, then restart:
-```bash
-docker compose down
-docker compose up -d
-```
-
-### Data Persistence
-
-Docker volumes are used to persist data across container restarts:
-
-| Volume | Purpose | Data Location |
-|--------|---------|---------------|
-| `postgres_data` | Database storage | PostgreSQL data directory |
-| `static_volume` | Static files | Django collected static files |
-| `media_volume` | Media uploads | User-uploaded media files |
-
-**Volume locations:**
-```bash
-# List all volumes
-docker volume ls
-
-# Inspect specific volume
-docker volume inspect conduit-deployment_postgres_data
-```
-
-**Backup database:**
-```bash
-docker compose exec database pg_dump -U conduit conduit > backup.sql
-```
-
-**Restore database:**
-```bash
-docker compose exec -T database psql -U conduit conduit < backup.sql
-```
-
----
-
-## Troubleshooting
-
-### Service won't start
-
-**Check logs:**
-```bash
-docker compose logs backend
-docker compose logs frontend
-docker compose logs database
-```
-
-**Common issues:**
-
-1. **Port already in use:**
-   ```
-   Error: bind: address already in use
-   ```
-   Solution: Change port in `.env` or stop conflicting service
-
-2. **Missing .env file:**
-   ```
-   Error: required variable not set
-   ```
-   Solution: Copy `.env.example` to `.env` and configure
-
-3. **Database connection fails:**
-   ```
-   Error: could not connect to server
-   ```
-   Solution: Wait for database to be ready, then restart backend:
-   ```bash
-   docker compose restart backend
-   ```
-
-### Frontend shows 404 errors
-
-**Check backend is running:**
-```bash
-docker compose ps backend
-```
-
-**Verify CORS configuration:**
-Ensure `CORS_ALLOWED_ORIGINS` in `.env` includes your frontend URL
-
-**Check backend logs:**
-```bash
-docker compose logs backend
-```
-
-### Database data lost
-
-Volumes must be created before first run. If you used `docker compose down -v`, all data is deleted.
-
-**Prevent data loss:**
-- Use `docker compose down` without `-v` flag
-- Regular backups recommended
-
-### Cannot access from VM IP
-
-**Check ALLOWED_HOSTS:**
-```bash
-# In .env file
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,YOUR_VM_IP
-```
-
-**Check firewall:**
-```bash
-# Ubuntu/Debian
-sudo ufw status
-sudo ufw allow 8282
-sudo ufw allow 8000
-```
-
-### Rebuild everything from scratch
-
-```bash
-# Stop and remove all containers, networks, and volumes
-docker compose down -v
-
-# Remove images
-docker compose down --rmi all
-
-# Rebuild and start
-docker compose up -d --build
-```
-
----
-
 **Project Information**
+- **Last Updated**: January 2026
 - **Course**: DevSecOps
-- **Institution**: Developer Akademie
 - **Project**: Conduit Containerization
-- **Last Updated**: December 2025

@@ -1,6 +1,6 @@
 # Conduit Deployment
 
-Production-ready containerized deployment for the Conduit application (Medium.com clone).
+This repository contains the **deployment configuration** for the Conduit full-stack application, a Medium.com clone. The setup uses Docker and Docker Compose to orchestrate a complete production environment.
 
 ---
 
@@ -19,8 +19,6 @@ Production-ready containerized deployment for the Conduit application (Medium.co
 ---
 
 ## Description
-
-This repository contains the **deployment configuration** for the Conduit full-stack application, a Medium.com clone. The setup uses Docker and Docker Compose to orchestrate a complete production environment.
 
 ### Components
 

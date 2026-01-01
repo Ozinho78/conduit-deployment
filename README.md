@@ -102,19 +102,19 @@ docker compose up -d --build
 
 ```bash
 conduit-deployment/
+├── .dockerignore               # Excludes Python cache, venv, .git, node_modules, dist from Docker context
 ├── docker-compose.yaml         # Orchestration: frontend, backend, postgres services
 ├── .env.example                # Template for .env, contains environment variables
 ├── .env                        # Runtime environment variables (NOT in Git!), created by YOU
 ├── .gitignore                  # Excludes .env, logs, IDE configs, OS files
 ├── README.md                   # This document, project documentation with ToC, quickstart, usage
-├── .dockerignore        # Excludes Python cache, venv, .git, node_modules, dist from Docker context
-├── conduit-backend/            # Cloned from separate repo
+├── conduit-frontend/           # contains frontend code, coded with Angular
+│   └── frontend.Dockerfile     # Multi-stage build: Angular build + npm serve
+├── conduit-backend/            # Contains backend code, coded with Django
 │   └── backend.Dockerfile      # Multi-stage build: Django app + Gunicorn WSGI
 │   └── entrypoint.sh           # Defines and controls default commands when container starts
 │   └── conduit/
 │       └── settings.py         # Must be modified for production (ALLOWED_HOSTS, DB config)
-├── conduit-frontend/           # Cloned from separate repo
-│   └── frontend.Dockerfile     # Multi-stage build: Angular build + npm serve
 ```
 
 ### Environment Configuration

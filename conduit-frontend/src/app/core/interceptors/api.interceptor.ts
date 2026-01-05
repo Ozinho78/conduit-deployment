@@ -14,6 +14,7 @@ export class ApiInterceptor implements HttpInterceptor {
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
     // const apiReq = req.clone({ url: `https://api.realworld.io/api${req.url}` });
+    // const apiReq = req.clone({ url: `http://5.75.162.229:8000/api${req.url}` });
     const apiReq = req.clone({ url: `http://127.0.0.1:8000/api${req.url}` });
     return next.handle(apiReq);
   }

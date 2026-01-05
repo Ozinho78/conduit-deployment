@@ -18,20 +18,6 @@ This repository contains the **deployment configuration** for the Conduit full-s
 
 ---
 
-## Description
-
-### Components
-
-- **Frontend**: Angular Single Page Application (SPA) served with Node.js `serve` package
-- **Backend**: Django REST API running with Gunicorn WSGI server
-- **Database**: PostgreSQL for data persistence
-
-### Purpose
-
-This is a containerized deployment using multi-stage Docker builds to minimize image sizes while maintaining production-ready configuration. All services are orchestrated via Docker Compose with proper volume management for data persistence and automatic restart policies.
-
----
-
 ## Prerequisites
 
 - **Docker**: Version 20.10 or higher
@@ -231,7 +217,7 @@ docker compose down
 ```
 
 **Stop and remove everything including data:**
-> ⚠️ **WARNING**
+> [!WARNING]
 > This deletes all database data!
 ```bash
 docker compose down -v

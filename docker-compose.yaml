@@ -2,7 +2,7 @@ services:
   database:
     image: postgres:13-alpine
     container_name: conduit-database
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DATABASE_NAME:-conduit}
       POSTGRES_USER: ${DATABASE_USER:-conduit}
@@ -22,7 +22,7 @@ services:
       context: ./conduit-backend
       dockerfile: Dockerfile
     container_name: conduit-backend
-    restart: always
+    restart: unless-stopped
     depends_on:
       database:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       context: ./conduit-frontend
       dockerfile: Dockerfile
     container_name: conduit-frontend
-    restart: always
+    restart: unless-stopped
     depends_on:
       - backend
     environment:

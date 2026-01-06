@@ -37,7 +37,7 @@ git --version
 
 ### 1. Clone the repository
 ```bash
-git clone git clone -b feature/conduit-container git@github.com:Ozinho78/conduit-deployment.git
+git clone -b feature/conduit-container git@github.com:Ozinho78/conduit-deployment.git
 cd conduit-deployment
 ```
 
@@ -65,12 +65,35 @@ CORS_ALLOWED_ORIGINS=http://localhost:8282,http://<YOUR_VM_IP_HERE>:8282
 python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 ```
 
-### 4. Build and start services
+### 4. Configure frontend API endpoint
+Create the environment configuration file for the Angular frontend:
+```bash
+mkdir -p conduit-frontend/src/environments
+
+cat > conduit-frontend/src/environments/environment.ts << 'EOF'
+export const environment = {
+  apiUrl: 'http://<YOUR_VM_IP_HERE>:8000/api'
+};
+EOF
+```
+
+> [!IMPORTANT] 
+> Replace `YOUR_VM_IP_HERE` with your actual VM IP address
+
+```bash
+cat > conduit-frontend/src/environments/environment.ts << 'EOF'
+export const environment = {
+  apiUrl: 'http://<YOUR_VM_IP_HERE>:8000/api'
+};
+EOF
+```
+
+### 5. Build and start services
 ```bash
 docker compose up -d --build
 ```
 
-### 5. Access application
+### 6. Access application
 - **Frontend**: `http://<YOUR_VM_IP:8282>`
 - **Backend API**: `http://<YOUR_VM_IP>:8000/api`
 - **Backend Admin**: `http://<YOUR_VM_IP>:8000/admin`

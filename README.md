@@ -69,22 +69,15 @@ python -c 'from django.core.management.utils import get_random_secret_key; print
 Create the environment configuration file for the Angular frontend:
 ```bash
 mkdir -p conduit-frontend/src/environments
-
-cat > conduit-frontend/src/environments/environment.ts << 'EOF'
-export const environment = {
-  apiUrl: 'http://<YOUR_VM_IP_HERE>:8000/api'
-};
-EOF
+nano conduit-frontend/src/environments/environment.ts
 ```
 
 > [!IMPORTANT] 
 > Replace `YOUR_VM_IP_HERE` with your actual VM IP address
 ```bash
-cat > conduit-frontend/src/environments/environment.ts << 'EOF'
 export const environment = {
   apiUrl: 'http://<YOUR_VM_IP_HERE>:8000/api'
 };
-EOF
 ```
 
 ### 5. Build and start services

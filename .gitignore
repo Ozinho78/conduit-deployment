@@ -316,5 +316,7 @@ certificates/
 
 # Test
 test/
+environments/
+environment.ts
 
 up.bat

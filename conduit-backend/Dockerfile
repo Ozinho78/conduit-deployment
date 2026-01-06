@@ -1,4 +1,3 @@
-# Single-stage build as requested
 FROM python:3.5-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -32,10 +31,6 @@ COPY --chown=deploy:deploy . .
 
 COPY --chown=deploy:deploy entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# RUN mkdir -p /app/staticfiles && \
-#     chown -R deploy:deploy /app/staticfiles && \
-#     chmod -R 755 /app/staticfiles
 
 RUN chown -R deploy:deploy /app
 

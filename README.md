@@ -79,7 +79,6 @@ EOF
 
 > [!IMPORTANT] 
 > Replace `YOUR_VM_IP_HERE` with your actual VM IP address
-
 ```bash
 cat > conduit-frontend/src/environments/environment.ts << 'EOF'
 export const environment = {
@@ -116,6 +115,9 @@ conduit-deployment/
 ├── README.md                   # This document, project documentation with ToC, quickstart, usage
 ├── conduit-frontend/           # contains frontend code, coded with Angular
 │   └── frontend.Dockerfile     # Multi-stage build: Angular build + npm serve
+│   └── src/
+│     └── environments/
+│       └── environment.ts      # Contains ip address for API-URL (NOT in Git!), created by YOU
 ├── conduit-backend/            # Contains backend code, coded with Django
 │   └── backend.Dockerfile      # Multi-stage build: Django app + Gunicorn WSGI
 │   └── entrypoint.sh           # Defines and controls default commands when container starts

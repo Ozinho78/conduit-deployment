@@ -1,0 +1,95 @@
+name: Deploy Conduit to VM
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Manuelles Deployment via GitHub UI
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Code auschecken
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Docker Buildx Setup
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. Login zu GitHub Container Registry
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Backend Image bauen und pushen
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./conduit-backend
+          file: ./conduit-backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/conduit-backend:latest
+            ghcr.io/${{ github.repository_owner }}/conduit-backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      # 5. Frontend Image bauen und pushen
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./conduit-frontend
+          file: ./conduit-frontend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/conduit-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/conduit-frontend:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+      # 6. SSH-Verbindung zur VM und Deployment
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            set -e  # Bei Fehler abbrechen
+            
+            echo "📦 Wechsle in Deployment-Verzeichnis..."
+            cd /opt/conduit-deployment || exit 1
+            
+            echo "🔐 Login zu GitHub Container Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            echo "⬇️  Pulling neueste Images..."
+            docker pull ghcr.io/${{ github.repository_owner }}/conduit-backend:latest || exit 1
+            docker pull ghcr.io/${{ github.repository_owner }}/conduit-frontend:latest || exit 1
+            
+            echo "🔄 Stoppe alte Container..."
+            docker compose -f docker-compose.prod.yaml down
+            
+            echo "🚀 Starte neue Container..."
+            docker compose -f docker-compose.prod.yaml up -d || exit 1
+            
+            echo "⏳ Warte auf Container-Start..."
+            sleep 5
+            
+            echo "🔍 Container-Status:"
+            docker compose -f docker-compose.prod.yaml ps
+            
+            echo "🧹 Cleanup alter Images..."
+            docker image prune -af --filter "until=24h"
+            
+            echo "✅ Deployment erfolgreich abgeschlossen!"
+            
+            echo "📊 Health Check:"
+            docker compose -f docker-compose.prod.yaml logs --tail=20 backend

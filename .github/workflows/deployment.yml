@@ -2,7 +2,9 @@ name: Deploy Conduit to VM
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - 'feature/**'
   workflow_dispatch:  # Manuelles Deployment via GitHub UI
 
 jobs:

@@ -58,7 +58,7 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-      - name: Generate Frontend environment.prod.ts
+      - name: Generate Frontend environment.ts
         run: |
           cat > conduit-frontend/src/environments/environment.ts << EOF
           export const environment = {

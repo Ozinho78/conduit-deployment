@@ -41,8 +41,8 @@ jobs:
           file: ./conduit-backend/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/conduit-backend:latest
-            ghcr.io/${{ github.repository_owner }}/conduit-backend:${{ github.sha }}
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:latest
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:${{ github.sha }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -54,8 +54,8 @@ jobs:
           file: ./conduit-frontend/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/conduit-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/conduit-frontend:${{ github.sha }}
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:${{ github.sha }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
@@ -66,7 +66,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          port: ${{ secrets.VPS_PORT }}
           script_stop: true
           script: |
             set -e  # Bei Fehler abbrechen
@@ -78,8 +78,8 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             echo "⬇️  Pulling neueste Images..."
-            docker pull ghcr.io/${{ github.repository_owner }}/conduit-backend:latest || exit 1
-            docker pull ghcr.io/${{ github.repository_owner }}/conduit-frontend:latest || exit 1
+            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:latest || exit 1
+            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest || exit 1
             
             echo "🔄 Stoppe alte Container..."
             docker compose -f docker-compose.prod.yaml down

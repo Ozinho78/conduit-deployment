@@ -58,9 +58,9 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-      - name: Generate Frontend environment.ts
+      - name: Generate Frontend environment.prod.ts
         run: |
-          cat > conduit-frontend/src/environments/environment.ts << EOF
+          cat > conduit-frontend/src/environments/environment.prod.ts << EOF
           export const environment = {
             production: true,
             apiUrl: 'http://${{ secrets.VPS_HOST }}:8000/api'

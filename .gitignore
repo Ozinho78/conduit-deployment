@@ -320,7 +320,7 @@ certificates/
 
 # Test
 test/
-environments/
-environment.ts
+# environments/
+# environment.ts
 
 up.bat

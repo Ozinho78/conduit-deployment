@@ -10,6 +10,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read      # Code lesen
+      packages: write     # Packages schreiben (ghcr.io)
     
     steps:
       # 1. Code auschecken

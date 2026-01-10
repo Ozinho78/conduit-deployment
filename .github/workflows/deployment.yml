@@ -91,16 +91,16 @@ jobs:
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest || exit 1
             
             echo "🔄 Stoppe alte Container..."
-            docker compose -f docker-compose.prod.yaml down
+            docker compose -f docker-compose.yaml down
             
             echo "🚀 Starte neue Container..."
-            docker compose -f docker-compose.prod.yaml up -d || exit 1
+            docker compose -f docker-compose.yaml up -d || exit 1
             
             echo "⏳ Warte auf Container-Start..."
             sleep 5
             
             echo "🔍 Container-Status:"
-            docker compose -f docker-compose.prod.yaml ps
+            docker compose -f docker-compose.yaml ps
             
             echo "🧹 Cleanup alter Images..."
             docker image prune -af --filter "until=24h"
@@ -108,4 +108,4 @@ jobs:
             echo "✅ Deployment erfolgreich abgeschlossen!"
             
             echo "📊 Health Check:"
-            docker compose -f docker-compose.prod.yaml logs --tail=20 backend
+            docker compose -f docker-compose.yaml logs --tail=20 backend

@@ -78,34 +78,34 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script_stop: true
           script: |
-            set -e  # Bei Fehler abbrechen
+            set -e
             
-            echo "📦 Wechsle in Deployment-Verzeichnis..."
+            echo "Change into deployment directory"
             cd /opt/conduit-deployment || exit 1
             
-            echo "🔐 Login zu GitHub Container Registry..."
+            echo "Login to GitHub Container Registry..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            echo "⬇️  Pulling neueste Images..."
+            echo "Pulling latest images..."
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:latest || exit 1
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest || exit 1
             
-            echo "🔄 Stoppe alte Container..."
+            echo "Stopping old containers..."
             docker compose -f docker-compose.yaml down
             
-            echo "🚀 Starte neue Container..."
+            echo "Starting new containers..."
             docker compose -f docker-compose.yaml up -d || exit 1
             
-            echo "⏳ Warte auf Container-Start..."
+            echo "Waiting for container start..."
             sleep 5
             
-            echo "🔍 Container-Status:"
+            echo "Container status"
             docker compose -f docker-compose.yaml ps
             
-            echo "🧹 Cleanup alter Images..."
+            echo "Cleanup old images..."
             docker image prune -af --filter "until=24h"
             
-            echo "✅ Deployment erfolgreich abgeschlossen!"
+            echo "Deployment finished successfully!"
             
-            echo "📊 Health Check:"
+            echo "Health Check:"
             docker compose -f docker-compose.yaml logs --tail=20 backend

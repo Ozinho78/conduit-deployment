@@ -93,7 +93,7 @@ jobs:
           API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
           
           # GitHub Configuration
-          GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }}
+          GITHUB_USERNAME=${{ steps.lowercase.outputs.owner }}
           
           # Image Tags
           BACKEND_TAG=latest

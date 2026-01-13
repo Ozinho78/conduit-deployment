@@ -68,48 +68,14 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-      - name: Create .env file from secrets
+      - name: Read docker-compose.yaml from repository
+        id: compose
         run: |
-          cat > .env << EOF
-          # Database Configuration
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          
-          # Django Configuration
-          DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-          DEBUG=${{ secrets.DEBUG }}
-          DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
-          
-          # CORS Configuration
-          CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
-          
-          # Port Configuration
-          FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
-          BACKEND_PORT=${{ secrets.BACKEND_PORT }}
-          
-          # API Configuration
-          API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
-          
-          # GitHub Configuration
-          GITHUB_USERNAME=${{ steps.lowercase.outputs.owner }}
-          
-          # Image Tags
-          BACKEND_TAG=latest
-          FRONTEND_TAG=latest
-          EOF
-
-      - name: Copy deployment files to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          source: ".env,docker-compose.yaml"
-          target: "/opt/conduit-deployment"
-          strip_components: 0
-          overwrite: true
+          {
+            echo "content<<COMPOSE_EOF"
+            cat docker-compose.yaml
+            echo "COMPOSE_EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
@@ -123,14 +89,45 @@ jobs:
             set -e
             
             echo "=========================================="
-            echo "Starting Deployment Process"
+            echo "Creating Deployment Files"
             echo "=========================================="
             
-            cd /opt/conduit-deployment || exit 1
+            mkdir -p /opt/conduit-deployment
+            cd /opt/conduit-deployment
             
-            echo "Verifying deployment files..."
+            # Create .env
+            cat > .env << 'ENV_EOF'
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+            DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+            DEBUG=${{ secrets.DEBUG }}
+            DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
+            CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+            FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
+            BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+            API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
+            GITHUB_USERNAME=${{ steps.lowercase.outputs.owner }}
+            BACKEND_TAG=latest
+            FRONTEND_TAG=latest
+            ENV_EOF
+            
+            # Create docker-compose.yaml from repo
+            cat > docker-compose.yaml << 'COMPOSE_EOF'
+            ${{ steps.compose.outputs.content }}
+            COMPOSE_EOF
+            
+            chmod 600 .env
+            chmod 644 docker-compose.yaml
+            
+            echo "✅ Files created successfully"
             ls -lah .env docker-compose.yaml
-
+            
+            echo ""
+            echo "=========================================="
+            echo "Starting Container Deployment"
+            echo "=========================================="
+            
             echo "Validating docker-compose.yaml..."
             docker compose -f docker-compose.yaml config > /dev/null || exit 1
             echo "✅ Configuration valid"
@@ -161,12 +158,6 @@ jobs:
             echo "Health Check - Backend Logs:"
             echo "=========================================="
             docker compose -f docker-compose.yaml logs --tail=30 backend
-            
-            echo ""
-            echo "=========================================="
-            echo "Health Check - Frontend Logs:"
-            echo "=========================================="
-            docker compose -f docker-compose.yaml logs --tail=15 frontend
             
             echo ""
             echo "Cleanup old images..."

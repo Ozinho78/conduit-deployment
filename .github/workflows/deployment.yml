@@ -72,11 +72,9 @@ jobs:
       - name: Read docker-compose.yaml from repository
         id: compose
         run: |
-          {
-            echo "content<<COMPOSE_EOF"
-            cat docker-compose.yaml
-            echo "COMPOSE_EOF"
-          } >> $GITHUB_OUTPUT
+          echo "content<<COMPOSE_EOF" >> $GITHUB_OUTPUT
+          cat docker-compose.yaml >> $GITHUB_OUTPUT
+          echo "COMPOSE_EOF" >> $GITHUB_OUTPUT
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3

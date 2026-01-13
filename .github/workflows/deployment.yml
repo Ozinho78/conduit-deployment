@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'feature/**'
   workflow_dispatch:
 
 jobs:
@@ -48,6 +47,15 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
+      - name: Generate Frontend environment.prod.ts
+        run: |
+          cat > conduit-frontend/src/environments/environment.prod.ts << EOF
+          export const environment = {
+            production: true,
+            apiUrl: 'http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api'
+          };
+          EOF
+
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
@@ -60,14 +68,48 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-      - name: Generate Frontend environment.prod.ts
+      - name: Create .env file from secrets
         run: |
-          cat > conduit-frontend/src/environments/environment.prod.ts << EOF
-          export const environment = {
-            production: true,
-            apiUrl: 'http://${{ secrets.VPS_HOST }}:8000/api'
-          };
+          cat > .env << EOF
+          # Database Configuration
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          
+          # Django Configuration
+          DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG=${{ secrets.DEBUG }}
+          DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
+          
+          # CORS Configuration
+          CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+          
+          # Port Configuration
+          FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
+          BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+          
+          # API Configuration
+          API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
+          
+          # GitHub Configuration
+          GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }}
+          
+          # Image Tags (dynamisch aus Git SHA)
+          BACKEND_TAG=latest
+          FRONTEND_TAG=latest
           EOF
+
+      - name: Copy deployment files to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: ".env,deployment/docker-compose.yaml"
+          target: "/opt/conduit-deployment"
+          strip_components: 0
+          overwrite: true
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
@@ -80,8 +122,21 @@ jobs:
           script: |
             set -e
             
-            echo "Change into deployment directory"
+            echo "=========================================="
+            echo "Starting Deployment Process"
+            echo "=========================================="
+            
             cd /opt/conduit-deployment || exit 1
+            
+            # Move docker-compose.yaml from deployment/
+            if [ -f deployment/docker-compose.yaml ]; then
+              echo "Moving docker-compose.yaml to deployment directory..."
+              mv deployment/docker-compose.yaml docker-compose.yaml
+              rmdir deployment 2>/dev/null || true
+            fi
+            
+            echo "Verifying deployment files..."
+            ls -lah .env docker-compose.yaml
             
             echo "Login to GitHub Container Registry..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -96,16 +151,30 @@ jobs:
             echo "Starting new containers..."
             docker compose -f docker-compose.yaml up -d || exit 1
             
-            echo "Waiting for container start..."
-            sleep 5
+            echo "Waiting for container startup..."
+            sleep 10
             
-            echo "Container status"
+            echo "=========================================="
+            echo "Container Status:"
+            echo "=========================================="
             docker compose -f docker-compose.yaml ps
             
+            echo ""
+            echo "=========================================="
+            echo "Health Check - Backend Logs:"
+            echo "=========================================="
+            docker compose -f docker-compose.yaml logs --tail=30 backend
+            
+            echo ""
+            echo "=========================================="
+            echo "Health Check - Frontend Logs:"
+            echo "=========================================="
+            docker compose -f docker-compose.yaml logs --tail=15 frontend
+            
+            echo ""
             echo "Cleanup old images..."
             docker image prune -af --filter "until=24h"
             
-            echo "Deployment finished successfully!"
-            
-            echo "Health Check:"
-            docker compose -f docker-compose.yaml logs --tail=20 backend
+            echo "=========================================="
+            echo "✅ Deployment finished successfully!"
+            echo "=========================================="

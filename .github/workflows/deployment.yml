@@ -69,6 +69,50 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
+      - name: Create .env file from secrets
+        run: |
+          cat > .env << EOF
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG=${{ secrets.DEBUG }}
+          DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
+          CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+          FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
+          BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+          API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
+          GITHUB_USERNAME=${{ steps.lowercase.outputs.owner }}
+          BACKEND_TAG=latest
+          FRONTEND_TAG=latest
+          EOF
+
+      - name: Ensure deployment directory exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            sudo mkdir -p /opt/conduit-deployment
+            sudo chown ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} /opt/conduit-deployment
+            sudo chmod 755 /opt/conduit-deployment
+            echo "✅ Deployment directory ready"
+
+      - name: Copy deployment files to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: ".env,docker-compose.yaml"
+          target: "/opt/conduit-deployment/"
+          overwrite: true
+          timeout: 60s
+          command_timeout: 30s
+
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -84,36 +128,13 @@ jobs:
             echo "Creating Deployment Files"
             echo "=========================================="
             
-            mkdir -p /opt/conduit-deployment
-            cd /opt/conduit-deployment
+            cd /opt/conduit-deployment || exit 1
             
-            # Create .env
-            cat > .env << 'ENV_EOF'
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-            DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-            DEBUG=${{ secrets.DEBUG }}
-            DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
-            CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
-            FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
-            BACKEND_PORT=${{ secrets.BACKEND_PORT }}
-            API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
-            GITHUB_USERNAME=${{ steps.lowercase.outputs.owner }}
-            BACKEND_TAG=latest
-            FRONTEND_TAG=latest
-            ENV_EOF
-            
-            echo "Downloading docker-compose.yaml from GitHub..."
-            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.v3.raw" \
-              -L "https://api.github.com/repos/${{ github.repository }}/contents/docker-compose.yaml?ref=${{ github.ref_name }}" \
-              -o docker-compose.yaml
-            
+            echo "Setting permissions"
             chmod 600 .env
             chmod 644 docker-compose.yaml
             
-            echo "✅ Files created successfully"
+            echo "Verifying deployment files"
             ls -lah .env docker-compose.yaml
             
             echo ""

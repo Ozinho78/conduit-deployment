@@ -107,7 +107,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: ".env,deployment/docker-compose.yaml"
+          source: ".env,docker-compose.yaml"
           target: "/opt/conduit-deployment"
           strip_components: 0
           overwrite: true

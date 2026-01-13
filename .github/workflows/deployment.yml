@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'feature/**'
   workflow_dispatch:
 
 jobs:
@@ -129,15 +128,12 @@ jobs:
             
             cd /opt/conduit-deployment || exit 1
             
-            # Move docker-compose.yaml from deployment/
-            if [ -f deployment/docker-compose.yaml ]; then
-              echo "Moving docker-compose.yaml to deployment directory..."
-              mv deployment/docker-compose.yaml docker-compose.yaml
-              rmdir deployment 2>/dev/null || true
-            fi
-            
             echo "Verifying deployment files..."
             ls -lah .env docker-compose.yaml
+
+            echo "Validating docker-compose.yaml..."
+            docker compose -f docker-compose.yaml config > /dev/null || exit 1
+            echo "✅ Configuration valid"
             
             echo "Login to GitHub Container Registry..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

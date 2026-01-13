@@ -69,13 +69,6 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-      - name: Read docker-compose.yaml from repository
-        id: compose
-        run: |
-          echo "content<<COMPOSE_EOF" >> $GITHUB_OUTPUT
-          cat docker-compose.yaml >> $GITHUB_OUTPUT
-          echo "COMPOSE_EOF" >> $GITHUB_OUTPUT
-
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -111,10 +104,11 @@ jobs:
             FRONTEND_TAG=latest
             ENV_EOF
             
-            # Create docker-compose.yaml from repo
-            cat > docker-compose.yaml << 'COMPOSE_EOF'
-            ${{ steps.compose.outputs.content }}
-            COMPOSE_EOF
+            echo "Downloading docker-compose.yaml from GitHub..."
+            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3.raw" \
+              -L "https://api.github.com/repos/${{ github.repository }}/contents/docker-compose.yaml?ref=${{ github.ref_name }}" \
+              -o docker-compose.yaml
             
             chmod 600 .env
             chmod 644 docker-compose.yaml

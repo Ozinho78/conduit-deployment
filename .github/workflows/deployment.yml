@@ -94,7 +94,7 @@ jobs:
           # GitHub Configuration
           GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }}
           
-          # Image Tags (dynamisch aus Git SHA)
+          # Image Tags
           BACKEND_TAG=latest
           FRONTEND_TAG=latest
           EOF

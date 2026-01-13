@@ -138,6 +138,9 @@ jobs:
             echo "Pulling latest images..."
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:latest || exit 1
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest || exit 1
+
+            echo "Cleaning up credentials..."
+            docker logout ghcr.io
             
             echo "Stopping old containers..."
             docker compose -f docker-compose.yaml down

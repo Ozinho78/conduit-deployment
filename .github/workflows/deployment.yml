@@ -1,0 +1,185 @@
+name: Deploy Conduit to VM
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    environment: Conduit_Secrets
+
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lowercase repository owner
+        id: lowercase
+        run: |
+          echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./conduit-backend
+          file: ./conduit-backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:latest
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Generate Frontend environment.prod.ts
+        run: |
+          cat > conduit-frontend/src/environments/environment.prod.ts << EOF
+          export const environment = {
+            production: true,
+            apiUrl: 'http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api'
+          };
+          EOF
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./conduit-frontend
+          file: ./conduit-frontend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest
+            ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+      - name: Create .env file from secrets
+        run: |
+          cat > .env << EOF
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG=${{ secrets.DEBUG }}
+          DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
+          CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+          FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}
+          BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+          API_URL=http://${{ secrets.VPS_HOST }}:${{ secrets.BACKEND_PORT }}/api
+          GITHUB_USERNAME=${{ steps.lowercase.outputs.owner }}
+          BACKEND_TAG=latest
+          FRONTEND_TAG=latest
+          EOF
+
+      - name: Ensure deployment directory exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            sudo mkdir -p /opt/conduit-deployment
+            sudo chown ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} /opt/conduit-deployment
+            sudo chmod 755 /opt/conduit-deployment
+            echo "✅ Deployment directory ready"
+
+      - name: Copy deployment files to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: ".env,docker-compose.yaml"
+          target: "/opt/conduit-deployment/"
+          overwrite: true
+          timeout: 60s
+          command_timeout: 30s
+
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            
+            echo "=========================================="
+            echo "Creating Deployment Files"
+            echo "=========================================="
+            
+            cd /opt/conduit-deployment || exit 1
+            
+            echo "Setting permissions"
+            chmod 600 .env
+            chmod 644 docker-compose.yaml
+            
+            echo "Verifying deployment files"
+            ls -lah .env docker-compose.yaml
+            
+            echo ""
+            echo "=========================================="
+            echo "Starting Container Deployment"
+            echo "=========================================="
+            
+            echo "Validating docker-compose.yaml..."
+            docker compose -f docker-compose.yaml config > /dev/null || exit 1
+            echo "✅ Configuration valid"
+            
+            echo "Login to GitHub Container Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            echo "Pulling latest images..."
+            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-backend:latest || exit 1
+            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/conduit-frontend:latest || exit 1
+
+            echo "Cleaning up credentials..."
+            docker logout ghcr.io
+            
+            echo "Stopping old containers..."
+            docker compose -f docker-compose.yaml down
+            
+            echo "Starting new containers..."
+            docker compose -f docker-compose.yaml up -d || exit 1
+            
+            echo "Waiting for container startup..."
+            sleep 10
+            
+            echo "=========================================="
+            echo "Container Status:"
+            echo "=========================================="
+            docker compose -f docker-compose.yaml ps
+            
+            echo ""
+            echo "=========================================="
+            echo "Health Check - Backend Logs:"
+            echo "=========================================="
+            docker compose -f docker-compose.yaml logs --tail=30 backend
+            
+            echo ""
+            echo "Cleanup old images..."
+            docker image prune -af --filter "until=24h"
+            
+            echo "=========================================="
+            echo "✅ Deployment finished successfully!"
+            echo "=========================================="
